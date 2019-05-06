@@ -1,175 +1,118 @@
 const bcrypt = require('bcrypt')
-const router = require('express').Router() //method app diganti ke router
+const router = require('express').Router() 
 const isEmail = require('validator/lib/isEmail')
-// const multer = require('multer')
 const conn = require('../connection/connection')
 
 const express = require('express')
 router.use(express.static('files'))
 
-// Login 
-router.post('/users/login', async (req, res) => {
-    const {email, cellphone, password} = req.body
-    const sql = `SELECT * FROM users 
-    WHERE email = '${email}'`
+// Show All Movies
+router.get('/movies/show', (req, res) => {
+    const sql = `SELECT * FROM movies`
+    conn.query(sql, (err, result) => {
+        if(err) return res.send("failed to show")
+        res.send(result)
+    })
+})
+// Add Movies
+router.post('/movies/add', (req, res) => {
+    const {nama, tahun, deskripsi} = req.body; data = req.body
+    const sql = `INSERT INTO movies (nama, tahun, deskripsi) VALUE ('${nama}','${tahun}','${deskripsi}')`
+    if(!data.nama||!data.tahun||!data.deskripsi) return res.send("nama, tahun, deskripsi tidak boleh kosong")
     
-    if(!isEmail(req.body.email)) return res.send("Email not valid")
-    req.body.password = await bcrypt.hash(req.body.password, 8)
-
-    conn.query(sql, async (err, result) => {
-        if (err) return res.send(err.message) 
-        if(!result[0]) return res.send ("account not found")        
-        
-        const hash = await bcrypt.compare(password, result[0].password)
-        
-        if(!hash) return res.send ("Email & password not match")
-        
-        res.send(result)
-    })
-})
-
-// Check user all users data, kec: password
-router.get('/checkallusers', (req, res) => {
-    const sql = `SELECT email, cellphone, first_name, middle_name, last_name, address, city FROM users u JOIN biodatas b ON u.id = b.id`
-    conn.query(sql, (err, result) => {
-        if (err) return res.send(err)
-        res.send(result)
-    })
-})
-
-// Check current user data
-router.post('/checkuser', (req, res) => {
-    const {email} = req.body, {cellphone} = req.body
-    const sql = `SELECT email, cellphone, first_name, middle_name, last_name, address, city 
-    FROM users u JOIN biodatas b ON u.id = b.id 
-    WHERE email = '${email}' OR cellphone = ${cellphone}`
-
-    conn.query(sql, (err, result) => {
-        if (err) return res.send(err.message) // Error pada query SQL
-        const user = result[0] // result berupa array of object
-        if (!user) return res.send("User Not Found")
-        res.send(user) 
-    })
-})
-
-// Add User
-router.post('/reg', async (req, res) => {
-    var data = req.body
-    var sql = `INSERT INTO users SET ?`
-    if(!data.email || !isEmail(data.email)) return res.send("Email not valid")
-    data.password = await bcrypt.hash(req.body.password, 8)
     conn.query(sql, data, (err,result) => {
-        if (err) return res.send(err.sqlMessage)        
+        if(err) return res.send("failed to send")
         res.send(result)
     })
-
 })
-
-// Change user email (on Progress)
-router.put('/user/change/:email', (req, res) => {
-    const data = [req.body, req.params.email]
-    const sql = `SELECT '?' , '?'`
-    if(!isEmail(req.body.email)) return res.send("Email not valid")
-    if(!isEmail(req.params.email)) return res.send("Email not valid")
-    console.log(req.body);
-    console.log(req.params.email);
+// Edit Movies
+router.put('/movies/edit/:id', (req, res) => {
+    const data = [req.body, req.params.id]
+    const {nama, tahun, deskripsi} = req.body
+    const id = req.params.id
+    const sql = `UPDATE movies SET nama = '${nama}', tahun = ${tahun}, deskripsi = '${deskripsi}' WHERE id = ${id}`
     
     conn.query(sql, data, (err, result) => {
-        if (err) return res.send(err.sqlMessage)
+        // console.log(sql);
+        if (err) return res.send("gagal update")
         res.send(result)
     })
 })
 
-// Edit user biodata (on Progress)
-router.post('/editbiodata/:id', async (req, res) => { 
-    const{id} = req.params
-    // if(req.body.password){
-    //      req.body.password = await bcrypt.hash(req.body.password, 8)
-    // }
-    const data = req.body
-        var sql = `UPDATE biodatas SET ? WHERE id=${id};`
-        var sql2 = `SELECT * FROM users WHERE id=${id};`
-        // var sql2 = `UPDATE users SET avatar = '${req.file.filename}' WHERE id=${user_id};`
-        conn.query(sql, data, (err, result) => {
-            if(err) return res.send('Error1')
-
-                conn.query(sql2, data, (err, result) => {
-                    if(err) return res.send(err)
-
-                    return res.send(result)
-                })
-        
-                
-            // return res.send(result)
-       })
-
-
-})
-
-
-// Delete user
-router.delete('/user', (req, res) => {
-    const data = req.body.email
-    const sql = `DELETE FROM users WHERE email = ?`
+// Delete Movies
+router.delete('/movies/delete/:id', (req,res) => {
+    const data = req.params.id
+    const sql = `DELETE FROM movies WHERE id = ?`
     
     conn.query(sql, data, (err, result) => {
-        if (err) return res.send(err.message)
-        res.send("User deleted")
+        if(err) return res.send("gagal delete")
+        res.send(result)
     })
 })
 
-
-// Check all product
-router.get('/checkallproducts', (req, res) => {
-    const sql = `SELECT * FROM products`
+// Show All Categories
+router.get('/categories/show', (req, res) => {
+    const sql = `SELECT * FROM categories`
     conn.query(sql, (err, result) => {
-        if (err) return res.send(err)
+        if(err) return res.send("failer to show categories")
+        res.send(result)
+    })
+})
+// Add Categories
+router.post('/categories/add', (req, res) => {
+    const {nama} = req.body;
+    const sql = `INSERT INTO categories (nama) VALUE ('${nama}')`
+    if(!req.body.nama) return res.send("nama tidak boleh kosong")
+
+    conn.query(sql, data, (err,result) => {
+        if(err) return res.send("failed to send")
+        res.send(result)
+    })
+})
+// Edit Categories
+router.put('/categories/edit/:id', (req, res) => {
+    const data = [req.body, req.params.id];
+    const {nama} = req.body
+    const id = req.params.id
+    const sql = `UPDATE categories SET nama = '${nama}' WHERE id = ${id}`
+    
+    conn.query(sql, data, (err, result) => {
+        console.log(sql);
+        if (err) return res.send("gagal update")
         res.send(result)
     })
 })
 
-// Check spesifik produk by name
-router.post('/checkproduct', (req, res) => {
-    const {productName} = req.body
-    const sql = `SELECT * FROM products 
-    WHERE productName = '${productName}' 
-    OR productName LIKE '%${productName}'
-    OR productName LIKE '${productName}%'`
-
-    conn.query(sql, (err, result) => {
-        if (err) return res.send(err.message)
-        const user = result 
-        if (!user) return res.send("Product Not Found")
-        res.send(user) 
-    })
-})
-
-// Add produk
-router.post('/product', (req, res) => {
-    var data = req.body
-    var sql = `INSERT INTO products SET ?`
-    var sql2 = `SELECT * FROM products WHERE productName = ?;`
+// Delete Categories
+router.delete('/categories/delete/:id', (req,res) => {
+    const data = req.params.id
+    const sql = `DELETE FROM categories WHERE id = ?`
     
-    if(!data.productName) return res.send("productName tidak boleh kosong")
-    if(!data.productPrice) return res.send("productPrice tidak boleh kosong")
-
-    conn.query(sql, data, (err, result) => { 
-        if (err) return res.send(err.sqlMessage) // Error pada post data
-
-        conn.query(sql2, data.productName, (err, result) => {
-            if (err) return res.send(err); res.send(result) // Error pada select data
-       })
+    conn.query(sql, data, (err, result) => {
+        if(err) return res.send("gagal delete")
+        res.send(result)
     })
 })
 
-// Delete produk by EXACT name
-router.delete('/product', (req, res) => {
-    const data = req.body.productName
-    const sql = `DELETE FROM products WHERE productName = ?`
+
+// Add Connection
+router.post('/connection', (req,res) => {
+    const {movie_id, cat_id} = req.body; data = req.body
+    const sql = `INSERT INTO movcat (movie_id, category_id) VALUE (${movie_id},${cat_id})`
 
     conn.query(sql, data, (err, result) => {
-        if (err) return res.send(err.message)
-        res.send("Data deleted")
+        if (err) return res.send("gagal berhubungan =_=;;")
+        res.send(result)
+    })
+})
+// Delete Connection
+router.delete('/connection/delete/:id', (req,res) => {
+    const data = req.params.id
+    const sql = `DELETE FROM movcat WHERE id = ?`
+
+    conn.query(sql, data, (err,result) => {
+        if(err) return res.send("gagal putus")
+        res.send(result)
     })
 })
 
