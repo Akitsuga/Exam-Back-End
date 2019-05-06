@@ -1,0 +1,26 @@
+{
+  "name": "api-games-sql",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "keywords": [],
+  "dependencies": {
+    "bcrypt": "^3.0.6",
+    "bcryptjs": "^2.4.3",
+    "express": "^4.16.4",
+    "multer": "^1.4.1",
+    "mysql": "github:mysqljs/mysql",
+    "mysqljs": "0.0.2-security",
+    "nodemailer": "^6.1.1",
+    "nodemon": "^1.19.0",
+    "validator": "^10.11.0"
+  },
+  "devDependencies": {
+    "env-cmd": "^8.0.2"
+  },
+  "description": ""
+}
